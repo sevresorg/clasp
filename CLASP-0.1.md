@@ -63,6 +63,10 @@ CLASP does not redefine commercial models, replace existing subscription mechani
 - The full MCP tool wire schemas, specified separately in Norma.
 - Aggregator catalogs that walk multiple publisher catalogs (see [Open Issues](#open-issues)).
 
+### Reference implementation
+
+A reference MCP server lives at [`sevresorg/clasp-mcp`](https://github.com/sevresorg/clasp-mcp). It is spec-pure, single-publisher, and in-memory; it exists to be read alongside this spec and to give other implementers a working target. The example exchanges in [`examples/`](./examples/) are replayed against it as automated conformance tests. It is not the production platform; that role belongs to [Norma](https://norma.sevres.org).
+
 ## Relationship to CoMP
 
 CLASP is strictly additive to CoMP. Every CLASP exchange is a valid CoMP exchange. CoMP-only AI Systems that do not understand CLASP extensions will receive a valid Package response and can fall back to the base retrieval interface declared in `retrieval.type` (typically MCP, value 3, per CoMP's Endpoint / Delivery Format list).

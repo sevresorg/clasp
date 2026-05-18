@@ -33,7 +33,7 @@ CLASP is one of several sibling repos under [`sevresorg`](https://github.com/sev
 
 - [`sevresorg/clasp-web`](https://github.com/sevresorg/clasp-web) — Nextra site at `clasp.sevres.org` that renders this spec. Carries this repo as a git submodule.
 - [`sevresorg/norma`](https://github.com/sevresorg/norma) — Norma, the turnkey CLASP-conformant gateway platform for SDOs.
-- [`sevresorg/clasp-mcp`](https://github.com/sevresorg/clasp-mcp) — open-source reference MCP server (planned).
+- [`sevresorg/clasp-mcp`](https://github.com/sevresorg/clasp-mcp) — reference MCP server (Python, Apache-2.0). Implements every CLASP tool and the discoverability catalog, and replays the example exchanges in [`examples/`](./examples/) as automated conformance tests.
 - [`sevresorg/sevres-web`](https://github.com/sevresorg/sevres-web) — umbrella site at `sevres.org`.
 
 ## License
