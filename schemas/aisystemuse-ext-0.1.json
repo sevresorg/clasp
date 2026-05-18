@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clasp.example/schemas/aisystemuse-ext-0.1.json",
+  "title": "CLASP aisystemuse.ext",
+  "description": "Engineering-standards intended-use vocabulary, populated into the ext field of a CoMP AISystemUse object. See clause 'Extension: aisystemuse.ext' of CLASP-0.1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["clasp_version"],
+  "properties": {
+    "clasp_version": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "engineering_intent": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "enum": [0, 1, 2, 3, 4, 5, 6],
+        "description": "0=design-consultation, 1=gap-analysis, 2=derivative-spec, 3=tooling-integration, 4=training-material, 5=regulatory-submission, 6=other."
+      },
+      "uniqueItems": true
+    },
+    "target_designation": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "target_edition": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Specific edition. For comparison tools, interpreted as the 'from' edition."
+    },
+    "target_edition_compare": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Additional edition for comparison tools (list_changes). When populated, target_edition is the 'from' and this is the 'to'. MUST NOT be populated unless at least one comparison tool is intended for the session."
+    },
+    "target_clauses": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "target_clauses_numbering": {
+      "type": "string",
+      "enum": ["from", "to"],
+      "description": "Which edition's numbering target_clauses references. Default is 'to'. MUST NOT be populated when target_edition_compare is empty."
+    },
+    "preferred_languages": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 2,
+        "description": "BCP 47 language tag."
+      },
+      "description": "Ordered list of preferred renderings; Content Owner returns first available match or canonical_language."
+    },
+    "requester_sectors": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 99]
+      },
+      "uniqueItems": true,
+      "description": "Industry sectors of the requester. Same value space as scope.ext.industry_sectors."
+    },
+    "deliverable_type": {
+      "type": "integer",
+      "enum": [0, 1, 2, 3, 4],
+      "description": "0=exploratory, 1=internal-document, 2=client-document, 3=stamped-deliverable, 4=submitted-to-regulator."
+    },
+    "requester_authority": {
+      "type": "integer",
+      "enum": [0, 1, 2],
+      "description": "0=individual-licensee, 1=organization-licensee, 2=unknown."
+    }
+  },
+  "allOf": [
+    {
+      "description": "target_clauses_numbering MUST NOT be populated unless target_edition_compare is also populated.",
+      "if": {
+        "required": ["target_clauses_numbering"]
+      },
+      "then": {
+        "required": ["target_edition_compare"]
+      }
+    }
+  ]
+}

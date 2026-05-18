@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clasp.example/schemas/catalog-index-0.1.json",
+  "title": "CLASP CatalogIndex",
+  "description": "Discoverability catalog index document, served unauthenticated at https://<publisher-domain>/.well-known/clasp-catalog. Lists each standard as a thin summary entry with a link to its per-standard CatalogStandard document. See clause 'Discoverability Catalog' of CLASP-0.1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "catalog_version",
+    "publisher",
+    "publisher_name",
+    "standards"
+  ],
+  "properties": {
+    "catalog_version": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "publisher": {
+      "type": "string",
+      "format": "hostname"
+    },
+    "publisher_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "publisher_licensing_overview_uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "standards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["designation", "title", "current_edition", "catalog_uri"],
+        "properties": {
+          "designation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "current_edition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "catalog_uri": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the CatalogStandard document for this designation."
+          }
+        }
+      }
+    }
+  }
+}

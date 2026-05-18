@@ -1,0 +1,305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clasp.example/schemas/citation-envelope-0.1.json",
+  "title": "CLASP Citation Envelope",
+  "description": "Envelope attached to every response from a CLASP-conformant retrieval endpoint. Establishes provenance and supports downstream attribution discipline. See clause 'Citation Envelope' of CLASP-0.1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "envelope_version",
+    "tool",
+    "publisher",
+    "designation",
+    "primary_edition",
+    "comparison_edition",
+    "language",
+    "retrieval_timestamp",
+    "endpoint_uri",
+    "license_id_fingerprint",
+    "deliverable_type",
+    "requester_authority",
+    "citations"
+  ],
+  "properties": {
+    "envelope_version": {
+      "type": "string",
+      "const": "0.1",
+      "description": "CLASP envelope schema version."
+    },
+    "tool": {
+      "type": "string",
+      "enum": [
+        "get_clause",
+        "search",
+        "resolve_term",
+        "list_changes",
+        "resolve_reference",
+        "compliance_check"
+      ],
+      "description": "The CLASP tool that produced this response."
+    },
+    "publisher": {
+      "type": "string",
+      "format": "hostname",
+      "description": "Canonical domain of the Content Owner that served the response."
+    },
+    "designation": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Standard designation."
+    },
+    "primary_edition": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Session's target_edition. For list_changes, the 'from' edition."
+    },
+    "comparison_edition": {
+      "type": ["string", "null"],
+      "description": "Session's target_edition_compare. Populated only for list_changes; null otherwise."
+    },
+    "language": {
+      "type": ["string", "null"],
+      "description": "BCP 47 language tag of the rendering returned. null for pointer-only responses."
+    },
+    "retrieval_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp at which the response was generated."
+    },
+    "endpoint_uri": {
+      "type": "string",
+      "format": "uri",
+      "description": "The retrieval endpoint that served the response."
+    },
+    "license_id_fingerprint": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 hex digest of the license ID (aisystemuse.lid), prefixed with 'sha256:'."
+    },
+    "deliverable_type": {
+      "type": "integer",
+      "enum": [0, 1, 2, 3, 4],
+      "description": "0 = exploratory, 1 = internal-document, 2 = client-document, 3 = stamped-deliverable, 4 = submitted-to-regulator."
+    },
+    "requester_authority": {
+      "type": "integer",
+      "enum": [0, 1, 2],
+      "description": "0 = individual-licensee, 1 = organization-licensee, 2 = unknown."
+    },
+    "citations": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One entry per cited clause. Even single-clause responses produce a one-element array.",
+      "items": {
+        "$ref": "#/$defs/citation"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "language MUST be a string when tool is not resolve_reference; for resolve_reference the language MAY be null when mode is pointer.",
+      "if": {
+        "properties": {
+          "tool": {
+            "not": { "const": "resolve_reference" }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "language": { "type": "string" }
+        }
+      }
+    },
+    {
+      "description": "comparison_edition MUST be populated for list_changes and null otherwise.",
+      "if": {
+        "properties": { "tool": { "const": "list_changes" } }
+      },
+      "then": {
+        "properties": { "comparison_edition": { "type": "string", "minLength": 1 } }
+      },
+      "else": {
+        "properties": { "comparison_edition": { "type": "null" } }
+      }
+    }
+  ],
+  "$defs": {
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clause",
+        "mode",
+        "content_hash",
+        "content_length",
+        "snippet",
+        "diff",
+        "pointer"
+      ],
+      "properties": {
+        "clause": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Clause identifier (e.g. '5.3.2', 'Annex C.4')."
+        },
+        "mode": {
+          "type": "integer",
+          "enum": [0, 1, 2, 3, 4, 5],
+          "description": "0 = exact-text, 1 = synthesized, 2 = snippet, 3 = diff, 4 = structured-analysis, 5 = pointer."
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "SHA-256 hex digest of the response content for this citation; prefixed with 'sha256:'."
+        },
+        "content_length": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Length in bytes of the content over which content_hash was computed."
+        },
+        "snippet": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/snippetObject" }
+          ]
+        },
+        "diff": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/diffObject" }
+          ]
+        },
+        "pointer": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/pointerObject" }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "description": "Mode 2 (snippet) requires snippet populated; diff and pointer MUST be null.",
+          "if": { "properties": { "mode": { "const": 2 } }, "required": ["mode"] },
+          "then": {
+            "properties": {
+              "snippet": { "$ref": "#/$defs/snippetObject" },
+              "diff": { "type": "null" },
+              "pointer": { "type": "null" }
+            }
+          }
+        },
+        {
+          "description": "Mode 3 (diff) requires diff populated; snippet and pointer MUST be null.",
+          "if": { "properties": { "mode": { "const": 3 } }, "required": ["mode"] },
+          "then": {
+            "properties": {
+              "snippet": { "type": "null" },
+              "diff": { "$ref": "#/$defs/diffObject" },
+              "pointer": { "type": "null" }
+            }
+          }
+        },
+        {
+          "description": "Mode 5 (pointer) requires pointer populated; snippet and diff MUST be null.",
+          "if": { "properties": { "mode": { "const": 5 } }, "required": ["mode"] },
+          "then": {
+            "properties": {
+              "snippet": { "type": "null" },
+              "diff": { "type": "null" },
+              "pointer": { "$ref": "#/$defs/pointerObject" }
+            }
+          }
+        },
+        {
+          "description": "Modes 0, 1, 4 (exact-text, synthesized, structured-analysis) require all three variant fields to be null.",
+          "if": {
+            "properties": { "mode": { "enum": [0, 1, 4] } },
+            "required": ["mode"]
+          },
+          "then": {
+            "properties": {
+              "snippet": { "type": "null" },
+              "diff": { "type": "null" },
+              "pointer": { "type": "null" }
+            }
+          }
+        }
+      ]
+    },
+    "snippetObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["offset", "length", "of_total_length"],
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Byte offset of the snippet within the full clause text."
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Byte length of the snippet."
+        },
+        "of_total_length": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Byte length of the full clause text from which the snippet was taken."
+        }
+      }
+    },
+    "diffObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from_edition", "to_edition", "change_kind"],
+      "properties": {
+        "from_edition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to_edition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "change_kind": {
+          "type": "string",
+          "enum": ["added", "removed", "modified", "renumbered"]
+        }
+      }
+    },
+    "pointerObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_publisher",
+        "target_designation",
+        "target_edition",
+        "target_clause",
+        "discoverability_uri"
+      ],
+      "properties": {
+        "target_publisher": {
+          "type": "string",
+          "format": "hostname"
+        },
+        "target_designation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_edition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_clause": {
+          "type": "string",
+          "minLength": 1
+        },
+        "discoverability_uri": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clasp.example/schemas/catalog-standard-0.1.json",
+  "title": "CLASP CatalogStandard",
+  "description": "Per-standard discoverability catalog document, served unauthenticated at https://<publisher-domain>/.well-known/clasp-catalog/<designation>. Carries rich metadata for one standard, including editions, table of contents, defined terms, and regulatory incorporations. MUST NOT carry normative clause text or definition text. See clause 'Discoverability Catalog' of CLASP-0.1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "catalog_version",
+    "publisher",
+    "designation",
+    "title",
+    "editions"
+  ],
+  "properties": {
+    "catalog_version": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "publisher": {
+      "type": "string",
+      "format": "hostname"
+    },
+    "designation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope_statement": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Plain-language description of what the standard covers. MUST NOT reproduce normative clause text."
+    },
+    "industry_sectors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/industrySectorEntry" },
+      "description": "Each entry pairs the CLASP code with its label and ISIC Rev 4 cross-reference."
+    },
+    "licensing_uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "license_inquiries_uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "editions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/edition" }
+    }
+  },
+  "$defs": {
+    "industrySectorEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clasp_code", "label"],
+      "properties": {
+        "clasp_code": {
+          "type": "integer",
+          "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 99]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "isic_rev4": {
+          "type": "string",
+          "description": "ISIC Rev 4 code (e.g. 'C21', 'B06', 'D35'). Omitted for code 99 (other)."
+        }
+      }
+    },
+    "edition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edition",
+        "is_current",
+        "canonical_language"
+      ],
+      "properties": {
+        "edition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pubdate": {
+          "type": "string",
+          "format": "date"
+        },
+        "is_current": {
+          "type": "boolean"
+        },
+        "canonical_language": {
+          "type": "string",
+          "minLength": 2,
+          "description": "BCP 47 tag."
+        },
+        "available_languages": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 2 },
+          "uniqueItems": true
+        },
+        "supersedes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "superseded_by": {
+          "type": ["string", "null"]
+        },
+        "regulatory_incorporations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/regulatoryIncorporation" }
+        },
+        "table_of_contents": {
+          "type": "array",
+          "description": "Clause headings only. MUST NOT carry clause body text. May be omitted entirely if the publisher does not wish to expose headings.",
+          "items": { "$ref": "#/$defs/tocEntry" }
+        },
+        "defined_terms": {
+          "type": "array",
+          "description": "Term names paired with the clauses where they are defined. MUST NOT carry definition text, descriptions, or paraphrases.",
+          "items": { "$ref": "#/$defs/definedTermEntry" }
+        }
+      }
+    },
+    "regulatoryIncorporation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["regulator", "regulation_id", "pinned_edition"],
+      "properties": {
+        "regulator": { "type": "string", "minLength": 1 },
+        "regulation_id": { "type": "string", "minLength": 1 },
+        "incorporation_date": { "type": "string", "format": "date" },
+        "pinned_edition": { "type": "string", "minLength": 1 },
+        "transition_window_start": { "type": "string", "format": "date" },
+        "transition_window_end": { "type": "string", "format": "date" },
+        "next_pinned_edition": { "type": "string", "minLength": 1 }
+      }
+    },
+    "tocEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clause", "title", "depth"],
+      "properties": {
+        "clause": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Heading title only. MUST NOT carry clause body text."
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "parent": {
+          "type": ["string", "null"],
+          "description": "Clause identifier of the parent TOC entry. Omitted or null for top-level entries. When present, MUST match the 'clause' value of another entry in the same table_of_contents array. Array order is normative; consumers MUST preserve it and MUST NOT re-sort by parent or any derived field."
+        }
+      }
+    },
+    "definedTermEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["term", "clause"],
+      "properties": {
+        "term": {
+          "type": "string",
+          "minLength": 1
+        },
+        "clause": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Clause identifier where the term is defined."
+        }
+      }
+    }
+  }
+}

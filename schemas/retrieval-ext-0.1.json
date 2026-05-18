@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clasp.example/schemas/retrieval-ext-0.1.json",
+  "title": "CLASP retrieval.ext",
+  "description": "CLASP-conformant MCP server capability declaration, populated into the ext field of a CoMP Retrieval object. See clause 'Extension: retrieval.ext' of CLASP-0.1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["clasp_version", "tools", "citation_envelope"],
+  "properties": {
+    "clasp_version": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "enum": [0, 1, 2, 3, 4, 5, 99],
+        "description": "0=get_clause, 1=search, 2=resolve_term, 3=list_changes, 4=resolve_reference, 5=compliance_check, 99=other."
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "exact_text_mode": {
+      "type": "integer",
+      "enum": [0, 1],
+      "description": "0=No, 1=Yes. Whether the endpoint supports deterministic exact-text retrieval. REQUIRED for endpoints serving stamped or submitted deliverables."
+    },
+    "citation_envelope": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI of the citation envelope schema this endpoint emits. For v0.1 this MUST be https://clasp.example/schemas/citation-envelope-0.1.json or a locally-hosted equivalent."
+    },
+    "max_artifact_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Maximum artifact size accepted by compliance_check. REQUIRED if tool value 5 (compliance_check) is listed in tools."
+    },
+    "revocation_uri": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional URI at which the Content Owner publishes a revocation list."
+    }
+  },
+  "allOf": [
+    {
+      "description": "If compliance_check (5) is listed in tools, max_artifact_bytes is required.",
+      "if": {
+        "properties": {
+          "tools": {
+            "contains": { "const": 5 }
+          }
+        }
+      },
+      "then": {
+        "required": ["max_artifact_bytes"]
+      }
+    }
+  ]
+}
